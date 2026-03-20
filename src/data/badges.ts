@@ -1,0 +1,68 @@
+import type { Badge } from '../types'
+
+export const badges: Badge[] = [
+  {
+    id: 'first_visit',
+    name: 'First Step',
+    description: 'Began your journey into the Mauritian wilderness.',
+    icon: 'compass',
+    xpRequired: 0,
+    earned: false,
+  },
+  {
+    id: 'wildlife_explorer',
+    name: 'Wildlife Explorer',
+    description: 'Viewed all species currently tracked in the region.',
+    icon: 'binoculars',
+    xpRequired: 50,
+    earned: false,
+  },
+  {
+    id: 'law_expert',
+    name: 'Law Expert',
+    description: 'Scored 100% on the hunting regulations quiz.',
+    icon: 'shield-check',
+    xpRequired: 0,
+    earned: false,
+  },
+  {
+    id: 'guide_reader',
+    name: 'Knowledge Seeker',
+    description: 'Read and understood 3 or more hunting guide sections.',
+    icon: 'book-open',
+    xpRequired: 100,
+    earned: false,
+  },
+  {
+    id: 'zone_explorer',
+    name: 'Zone Explorer',
+    description: 'Investigated all known hunting zones on the map.',
+    icon: 'map',
+    xpRequired: 150,
+    earned: false,
+  },
+  {
+    id: 'checklist_done',
+    name: 'Prepared Hunter',
+    description: 'Completed the full pre-hunt safety and gear checklist.',
+    icon: 'clipboard-check',
+    xpRequired: 80,
+    earned: false,
+  },
+  {
+    id: 'tracker',
+    name: 'Tracker',
+    description: 'Reached level 2 by gaining experience and knowledge.',
+    icon: 'footprints',
+    xpRequired: 200,
+    earned: false,
+  },
+  {
+    id: 'veteran',
+    name: 'Veteran',
+    description: 'Reached level 3, showing deep respect and skill for the wild.',
+    icon: 'medal',
+    xpRequired: 500,
+    earned: false,
+  },
+]
