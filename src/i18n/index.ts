@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import en from './locales/en'
 import fr from './locales/fr'
+import mc from './locales/mc'
 
 i18n
   .use(LanguageDetector)
@@ -11,9 +12,10 @@ i18n
     resources: {
       en: { translation: en },
       fr: { translation: fr },
+      mc: { translation: mc },
     },
     fallbackLng: 'en',
-    supportedLngs: ['en', 'fr'],
+    supportedLngs: ['en', 'fr', 'mc'],
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
