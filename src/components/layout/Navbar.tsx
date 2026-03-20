@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -6,6 +7,14 @@ import {
   Crosshair, PawPrint, NotebookPen, Award, Footprints, Building2,
   CalendarDays, Zap, Scissors, HeartPulse, ScanEye, ChevronDown,
 } from 'lucide-react'
+import { useAppStore } from '../../store/useAppStore'
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+import { useTranslation } from 'react-i18next'
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
 
 function DeerIcon({ className }: { className?: string }) {
   return (
@@ -25,32 +34,16 @@ function DeerIcon({ className }: { className?: string }) {
   )
 }
 
-import { useAppStore } from '../../store/useAppStore'
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
-import { useTranslation } from 'react-i18next'
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
-
 type NavItem = { name: string; path: string; icon: React.FC<{ className?: string }> }
 type NavGroup = { label: string; items: NavItem[] }
 
-// ── Dropdown group component ───────────────────────────────────────────────────
-function DropdownGroup({
-  group,
-  isActive,
-}: {
-  group: NavGroup
-  isActive: boolean
-}) {
+// ── Desktop dropdown ──────────────────────────────────────────────────────────
+function DropdownGroup({ group }: { group: NavGroup }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const groupActive = group.items.some((i) => i.path === location.pathname)
 
-  // Close on outside click
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
@@ -69,13 +62,11 @@ function DropdownGroup({
       <button
         className={cn(
           'flex items-center gap-1 text-sm font-medium tracking-wide transition-colors hover:text-forest-400',
-          groupActive || isActive ? 'text-forest-400' : 'text-white/70'
+          groupActive ? 'text-forest-400' : 'text-white/70'
         )}
       >
         {group.label}
-        <ChevronDown
-          className={cn('w-3.5 h-3.5 transition-transform duration-200', open && 'rotate-180')}
-        />
+        <ChevronDown className={cn('w-3.5 h-3.5 transition-transform duration-200', open && 'rotate-180')} />
       </button>
 
       <AnimatePresence>
@@ -111,15 +102,195 @@ function DropdownGroup({
   )
 }
 
+// ── Mobile menu — rendered via portal so it always covers the full viewport ──
+function MobileMenu({
+  open,
+  onClose,
+  navGroups,
+  langLabel,
+  cycleLang,
+}: {
+  open: boolean
+  onClose: () => void
+  navGroups: NavGroup[]
+  langLabel: string
+  cycleLang: () => void
+}) {
+  const location = useLocation()
+  const { t } = useTranslation()
+  const [openGroup, setOpenGroup] = useState<string | null>(null)
+
+  // Reset open group on route change
+  useEffect(() => { setOpenGroup(null) }, [location.pathname])
+
+  // Lock body scroll while open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, x: '100%' }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: '100%' }}
+          transition={{ type: 'spring', damping: 28, stiffness: 240 }}
+          // Portal renders directly in body — no containing block issues
+          style={{ position: 'fixed', inset: 0, zIndex: 9999 }}
+          className="bg-forest-950 flex flex-col lg:hidden"
+        >
+          {/* ── Header ── */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-forest-800 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-forest-600 rounded-lg flex items-center justify-center">
+                <DeerIcon className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-display font-bold italic">RUSA</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={cycleLang}
+                className="px-3 py-1.5 rounded-full bg-forest-900 border border-forest-800 text-xs font-bold tracking-widest uppercase text-forest-400"
+              >
+                {langLabel}
+              </button>
+              <button
+                onClick={onClose}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-forest-900/60 border border-forest-800 text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* ── Scrollable nav content ── */}
+          <div className="flex-1 overflow-y-auto py-3 px-4 space-y-1">
+
+            {/* Home */}
+            <Link
+              to="/"
+              className={cn(
+                'flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-semibold transition-colors',
+                location.pathname === '/'
+                  ? 'text-forest-400 bg-forest-900/60 border border-forest-700'
+                  : 'text-white/80 hover:bg-forest-900/40 border border-transparent'
+              )}
+            >
+              <span className="w-9 h-9 flex items-center justify-center rounded-xl bg-forest-800/60">
+                <Home className="w-5 h-5" />
+              </span>
+              {t('nav.home')}
+            </Link>
+
+            {/* Divider */}
+            <div className="h-px bg-forest-800/60 my-2" />
+
+            {/* Grouped accordion sections */}
+            {navGroups.map((group) => {
+              const isOpen = openGroup === group.label
+              const groupActive = group.items.some((i) => i.path === location.pathname)
+              return (
+                <div key={group.label}>
+                  <button
+                    onClick={() => setOpenGroup(isOpen ? null : group.label)}
+                    className={cn(
+                      'w-full flex items-center justify-between px-4 py-4 rounded-2xl text-lg font-semibold transition-colors border',
+                      groupActive
+                        ? 'text-forest-400 bg-forest-900/60 border-forest-700'
+                        : isOpen
+                        ? 'text-white bg-forest-900/40 border-forest-800'
+                        : 'text-white/80 hover:bg-forest-900/40 border-transparent'
+                    )}
+                  >
+                    <span>{group.label}</span>
+                    <ChevronDown
+                      className={cn('w-5 h-5 text-white/40 transition-transform duration-200', isOpen && 'rotate-180')}
+                    />
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.22, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-1 mb-2 ml-2 rounded-xl border border-forest-800/60 bg-forest-900/20 overflow-hidden">
+                          {group.items.map((item, i) => {
+                            const Icon = item.icon
+                            const active = location.pathname === item.path
+                            return (
+                              <Link
+                                key={item.path}
+                                to={item.path}
+                                className={cn(
+                                  'flex items-center gap-3 px-4 py-3.5 text-base transition-colors',
+                                  i < group.items.length - 1 && 'border-b border-forest-800/40',
+                                  active
+                                    ? 'text-forest-400 bg-forest-800/40'
+                                    : 'text-white/70 hover:text-white hover:bg-forest-800/30'
+                                )}
+                              >
+                                <span className="w-7 h-7 flex items-center justify-center rounded-lg bg-forest-800/60 flex-shrink-0">
+                                  <Icon className="w-4 h-4" />
+                                </span>
+                                {item.name}
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )
+            })}
+
+            {/* Divider */}
+            <div className="h-px bg-forest-800/60 my-2" />
+
+            {/* Dashboard */}
+            <Link
+              to="/dashboard"
+              className={cn(
+                'flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-semibold transition-colors border',
+                location.pathname === '/dashboard'
+                  ? 'text-forest-400 bg-forest-900/60 border-forest-700'
+                  : 'text-white/80 hover:bg-forest-900/40 border-transparent'
+              )}
+            >
+              <span className="w-9 h-9 flex items-center justify-center rounded-xl bg-forest-800/60">
+                <User className="w-5 h-5" />
+              </span>
+              {t('nav.dashboard')}
+            </Link>
+
+            {/* Bottom padding so last item isn't against edge */}
+            <div className="h-6" />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
+  )
+}
+
+// ── Main Navbar ───────────────────────────────────────────────────────────────
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [mobileOpenGroup, setMobileOpenGroup] = useState<string | null>(null)
   const location = useLocation()
   const { soundEnabled, toggleSound, xp, level } = useAppStore()
   const { t, i18n } = useTranslation()
 
-  // ── Nav structure ────────────────────────────────────────────────────────────
   const navGroups: NavGroup[] = [
     {
       label: t('nav.group_wildlife'),
@@ -166,7 +337,6 @@ export function Navbar() {
 
   useEffect(() => {
     setIsMenuOpen(false)
-    setMobileOpenGroup(null)
   }, [location.pathname])
 
   const xpProgress = (xp % 200) / 200 * 100
@@ -179,216 +349,108 @@ export function Navbar() {
   const langLabel = lang === 'fr' ? 'FR' : lang === 'mc' ? 'MC' : 'EN'
 
   return (
-    <nav
-      className={cn(
-        'fixed top-0 inset-x-0 z-[100] transition-all duration-300 border-b border-transparent',
-        isScrolled ? 'h-16 bg-forest-950/80 backdrop-blur-xl border-forest-800' : 'h-24 bg-transparent'
-      )}
-    >
-      <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
-          <div className="w-10 h-10 bg-forest-600 rounded-lg flex items-center justify-center group-hover:bg-forest-500 transition-colors">
-            <DeerIcon className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-2xl font-display font-bold tracking-tighter uppercase italic">Rusa</span>
-        </Link>
-
-        {/* Desktop Nav */}
-        <div className="hidden lg:flex items-center gap-6">
-          {/* Home — direct link */}
-          <Link
-            to="/"
-            className={cn(
-              'relative text-sm font-medium tracking-wide transition-colors hover:text-forest-400',
-              location.pathname === '/' ? 'text-forest-400' : 'text-white/70'
-            )}
-          >
-            <Home className="w-4 h-4" />
-            {location.pathname === '/' && (
-              <motion.div layoutId="nav-underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-forest-500" />
-            )}
+    <>
+      <nav
+        className={cn(
+          'fixed top-0 inset-x-0 z-[100] transition-all duration-300 border-b border-transparent',
+          isScrolled ? 'h-16 bg-forest-950/80 backdrop-blur-xl border-forest-800' : 'h-24 bg-transparent'
+        )}
+      >
+        <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+            <div className="w-10 h-10 bg-forest-600 rounded-lg flex items-center justify-center group-hover:bg-forest-500 transition-colors">
+              <DeerIcon className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-2xl font-display font-bold tracking-tighter uppercase italic">Rusa</span>
           </Link>
 
-          {/* Grouped dropdowns */}
-          {navGroups.map((group) => (
-            <DropdownGroup key={group.label} group={group} isActive={false} />
-          ))}
+          {/* Desktop Nav */}
+          <div className="hidden lg:flex items-center gap-6">
+            <Link
+              to="/"
+              className={cn(
+                'relative text-sm font-medium tracking-wide transition-colors hover:text-forest-400',
+                location.pathname === '/' ? 'text-forest-400' : 'text-white/70'
+              )}
+            >
+              <Home className="w-4 h-4" />
+              {location.pathname === '/' && (
+                <motion.div layoutId="nav-underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-forest-500" />
+              )}
+            </Link>
 
-          {/* Dashboard — direct link */}
-          <Link
-            to="/dashboard"
-            className={cn(
-              'relative text-sm font-medium tracking-wide transition-colors hover:text-forest-400',
-              location.pathname === '/dashboard' ? 'text-forest-400' : 'text-white/70'
-            )}
-          >
-            <User className="w-4 h-4" />
-            {location.pathname === '/dashboard' && (
-              <motion.div layoutId="nav-underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-forest-500" />
-            )}
-          </Link>
-        </div>
+            {navGroups.map((group) => (
+              <DropdownGroup key={group.label} group={group} />
+            ))}
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-3">
-          {/* Language Toggle */}
-          <button
-            onClick={cycleLang}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-forest-900/50 border border-forest-800 hover:bg-forest-800 transition-colors text-xs font-bold tracking-widest uppercase text-forest-400"
-          >
-            {langLabel}
-          </button>
-
-          {/* Sound Toggle */}
-          <button
-            onClick={toggleSound}
-            className="w-10 h-10 rounded-full bg-forest-900/50 border border-forest-800 flex items-center justify-center hover:bg-forest-800 transition-colors"
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-5 h-5 text-forest-400" />
-            ) : (
-              <VolumeX className="w-5 h-5 text-white/50" />
-            )}
-          </button>
-
-          {/* XP Bar */}
-          <div className="hidden sm:flex flex-col items-end gap-1">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/50">
-              <span>LVL {level}</span>
-              <span className="text-forest-500">{xp} XP</span>
-            </div>
-            <div className="w-24 h-1.5 bg-forest-900 rounded-full overflow-hidden border border-forest-800">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${xpProgress}%` }}
-                className="h-full bg-forest-500 shadow-[0_0_10px_rgba(58,122,48,0.5)]"
-              />
-            </div>
+            <Link
+              to="/dashboard"
+              className={cn(
+                'relative text-sm font-medium tracking-wide transition-colors hover:text-forest-400',
+                location.pathname === '/dashboard' ? 'text-forest-400' : 'text-white/70'
+              )}
+            >
+              <User className="w-4 h-4" />
+              {location.pathname === '/dashboard' && (
+                <motion.div layoutId="nav-underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-forest-500" />
+              )}
+            </Link>
           </div>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden w-10 h-10 flex items-center justify-center text-white"
-          >
-            {isMenuOpen ? <X /> : <Menu />}
-          </button>
-        </div>
-      </div>
+          {/* Right Actions */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={cycleLang}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-forest-900/50 border border-forest-800 hover:bg-forest-800 transition-colors text-xs font-bold tracking-widest uppercase text-forest-400"
+            >
+              {langLabel}
+            </button>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[101] bg-forest-950 lg:hidden flex flex-col overflow-y-auto"
-          >
-            {/* Mobile header */}
-            <div className="flex items-center justify-between p-6 border-b border-forest-800 flex-shrink-0">
-              <span className="text-2xl font-display font-bold italic">RUSA</span>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={cycleLang}
-                  className="px-3 py-1.5 rounded-full bg-forest-900 border border-forest-800 text-xs font-bold tracking-widest uppercase text-forest-400"
-                >
-                  {langLabel}
-                </button>
-                <button onClick={() => setIsMenuOpen(false)}>
-                  <X className="w-8 h-8" />
-                </button>
+            <button
+              onClick={toggleSound}
+              className="w-10 h-10 rounded-full bg-forest-900/50 border border-forest-800 flex items-center justify-center hover:bg-forest-800 transition-colors"
+            >
+              {soundEnabled ? (
+                <Volume2 className="w-5 h-5 text-forest-400" />
+              ) : (
+                <VolumeX className="w-5 h-5 text-white/50" />
+              )}
+            </button>
+
+            <div className="hidden sm:flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/50">
+                <span>LVL {level}</span>
+                <span className="text-forest-500">{xp} XP</span>
+              </div>
+              <div className="w-24 h-1.5 bg-forest-900 rounded-full overflow-hidden border border-forest-800">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${xpProgress}%` }}
+                  className="h-full bg-forest-500 shadow-[0_0_10px_rgba(58,122,48,0.5)]"
+                />
               </div>
             </div>
 
-            {/* Mobile nav groups */}
-            <div className="flex flex-col p-6 gap-2">
-              {/* Home */}
-              <Link
-                to="/"
-                className={cn(
-                  'flex items-center gap-4 px-4 py-3 rounded-xl text-xl font-display italic transition-colors',
-                  location.pathname === '/' ? 'text-forest-500 bg-forest-900/50' : 'text-white hover:bg-forest-900/30'
-                )}
-              >
-                <Home className="w-6 h-6" />
-                {t('nav.home')}
-              </Link>
+            {/* Burger — only shown on mobile */}
+            <button
+              onClick={() => setIsMenuOpen(true)}
+              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-full bg-forest-900/50 border border-forest-800 text-white"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </nav>
 
-              {/* Grouped accordion sections */}
-              {navGroups.map((group) => {
-                const isOpen = mobileOpenGroup === group.label
-                const groupActive = group.items.some((i) => i.path === location.pathname)
-                return (
-                  <div key={group.label} className="rounded-xl overflow-hidden border border-forest-800/50">
-                    <button
-                      onClick={() => setMobileOpenGroup(isOpen ? null : group.label)}
-                      className={cn(
-                        'w-full flex items-center justify-between px-4 py-3 text-left text-xl font-display italic transition-colors',
-                        groupActive ? 'text-forest-500 bg-forest-900/50' : 'text-white hover:bg-forest-900/30'
-                      )}
-                    >
-                      {group.label}
-                      <ChevronDown
-                        className={cn('w-5 h-5 transition-transform duration-200 flex-shrink-0', isOpen && 'rotate-180')}
-                      />
-                    </button>
-                    <AnimatePresence initial={false}>
-                      {isOpen && (
-                        <motion.div
-                          initial={{ height: 0 }}
-                          animate={{ height: 'auto' }}
-                          exit={{ height: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden bg-forest-900/30"
-                        >
-                          {group.items.map((item, i) => {
-                            const Icon = item.icon
-                            const active = location.pathname === item.path
-                            return (
-                              <motion.div
-                                key={item.path}
-                                initial={{ opacity: 0, x: 10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.04 }}
-                              >
-                                <Link
-                                  to={item.path}
-                                  className={cn(
-                                    'flex items-center gap-3 px-6 py-3 text-base transition-colors',
-                                    active ? 'text-forest-400' : 'text-white/70 hover:text-white'
-                                  )}
-                                >
-                                  <Icon className="w-5 h-5 flex-shrink-0" />
-                                  {item.name}
-                                </Link>
-                              </motion.div>
-                            )
-                          })}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )
-              })}
-
-              {/* Dashboard */}
-              <Link
-                to="/dashboard"
-                className={cn(
-                  'flex items-center gap-4 px-4 py-3 rounded-xl text-xl font-display italic transition-colors',
-                  location.pathname === '/dashboard' ? 'text-forest-500 bg-forest-900/50' : 'text-white hover:bg-forest-900/30'
-                )}
-              >
-                <User className="w-6 h-6" />
-                {t('nav.dashboard')}
-              </Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
+      {/* Mobile menu rendered via portal — escapes nav's containing block */}
+      <MobileMenu
+        open={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        navGroups={navGroups}
+        langLabel={langLabel}
+        cycleLang={cycleLang}
+      />
+    </>
   )
 }
