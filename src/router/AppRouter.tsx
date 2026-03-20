@@ -34,7 +34,7 @@ export function AppRouter() {
     <BrowserRouter>
       <ScrollToTop />
       <Navbar />
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/wildlife" element={<WildlifePage />} />

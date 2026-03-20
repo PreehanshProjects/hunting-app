@@ -34,12 +34,30 @@
 @layer base {
   * {
     border-color: #1e3d19;
+    /* Faster tap response — eliminates 300ms delay on mobile */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   body {
     background-color: var(--color-forest-950);
     color: white;
     font-family: var(--font-body);
+    /* Smooth momentum scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Only hide cursor on actual pointer devices */
     cursor: none;
+    /* Prevent font size inflation on orientation change */
+    -webkit-text-size-adjust: 100%;
+  }
+  /* Restore cursor on touch-only devices */
+  @media (hover: none) and (pointer: coarse) {
+    body { cursor: auto; }
+  }
+  /* GPU compositing hint for animated elements */
+  .motion-safe {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 }
 

@@ -12,7 +12,8 @@ export function PageWrapper({ children }: Props) {
       animate="animate"
       exit="exit"
       variants={pageTransition}
-      className="min-h-screen pt-20"
+      className="min-h-screen pt-16 sm:pt-20"
+      style={{ willChange: 'opacity' }}
     >
       {children}
     </motion.div>
