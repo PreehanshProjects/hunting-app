@@ -5,10 +5,20 @@ import { useMousePosition } from '../../hooks/useMousePosition'
 export function CustomCursor() {
   const { x, y } = useMousePosition()
   const [cursorType, setCursorType] = useState<'default' | 'pointer' | 'view'>('default')
+  const [visible, setVisible] = useState(false)
 
   const springConfig = { stiffness: 150, damping: 18 }
   const springX = useSpring(x, springConfig)
   const springY = useSpring(y, springConfig)
+
+  useEffect(() => {
+    // Only show on devices that support hover (i.e. not touch-only)
+    const mediaQuery = window.matchMedia('(hover: hover) and (pointer: fine)')
+    setVisible(mediaQuery.matches)
+    const onChange = (e: MediaQueryListEvent) => setVisible(e.matches)
+    mediaQuery.addEventListener('change', onChange)
+    return () => mediaQuery.removeEventListener('change', onChange)
+  }, [])
 
   useEffect(() => {
     const handleMouseEnter = (e: MouseEvent) => {
@@ -46,6 +56,8 @@ export function CustomCursor() {
       border: '2px solid rgba(58, 122, 48, 1)',
     }
   }
+
+  if (!visible) return null
 
   return (
     <>
