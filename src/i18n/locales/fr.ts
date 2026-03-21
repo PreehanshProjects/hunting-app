@@ -21,6 +21,12 @@ const fr = {
     group_learn: 'Apprendre',
     group_gear: 'Équipement',
     group_myhunt: 'Ma Chasse',
+    sightings: 'Carte Observations',
+    bloodtrail: 'Piste de Sang',
+    licenceguide: 'Guide Permis',
+    ballistics: 'Balistique',
+    maintenance: 'Entretien',
+    permits: 'Permis & Docs',
   },
   hero: {
     line1: 'Vivez la Chasse.',

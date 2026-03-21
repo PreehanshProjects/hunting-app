@@ -6,6 +6,7 @@ import {
   Volume2, VolumeX, Menu, X, Shield, Map as MapIcon, BookOpen, User, Home,
   Crosshair, PawPrint, NotebookPen, Award, Footprints, Building2,
   CalendarDays, Zap, Scissors, HeartPulse, ScanEye, ChevronDown,
+  MapPin, Droplets, ScrollText, Target, Wrench, ClipboardList,
 } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import { clsx, type ClassValue } from 'clsx'
@@ -299,6 +300,8 @@ export function Navbar() {
         { name: t('nav.tracks'), path: '/tracks', icon: Footprints },
         { name: t('nav.speciesquiz'), path: '/speciesquiz', icon: ScanEye },
         { name: t('nav.zones'), path: '/zones', icon: MapIcon },
+        { name: t('nav.sightings'), path: '/sightings', icon: MapPin },
+        { name: t('nav.bloodtrail'), path: '/bloodtrail', icon: Droplets },
       ],
     },
     {
@@ -307,6 +310,7 @@ export function Navbar() {
         { name: t('nav.guide'), path: '/guide', icon: BookOpen },
         { name: t('nav.law'), path: '/law', icon: Shield },
         { name: t('nav.firstaid'), path: '/firstaid', icon: HeartPulse },
+        { name: t('nav.licenceguide'), path: '/licenceguide', icon: ScrollText },
       ],
     },
     {
@@ -316,6 +320,8 @@ export function Navbar() {
         { name: t('nav.ammo'), path: '/ammo', icon: Zap },
         { name: t('nav.dogs'), path: '/dogs', icon: PawPrint },
         { name: t('nav.processing'), path: '/processing', icon: Scissors },
+        { name: t('nav.ballistics'), path: '/ballistics', icon: Target },
+        { name: t('nav.maintenance'), path: '/maintenance', icon: Wrench },
       ],
     },
     {
@@ -325,6 +331,7 @@ export function Navbar() {
         { name: t('nav.trophy'), path: '/trophy', icon: Award },
         { name: t('nav.calendar'), path: '/calendar', icon: CalendarDays },
         { name: t('nav.estates'), path: '/estates', icon: Building2 },
+        { name: t('nav.permits'), path: '/permits', icon: ClipboardList },
       ],
     },
   ]

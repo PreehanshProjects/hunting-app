@@ -27,6 +27,12 @@ import AmmoPage from '../pages/Ammo/AmmoPage'
 import ProcessingPage from '../pages/Processing/ProcessingPage'
 import FirstAidPage from '../pages/FirstAid/FirstAidPage'
 import SpeciesQuizPage from '../pages/SpeciesQuiz/SpeciesQuizPage'
+import LicenceGuidePage from '../pages/LicenceGuide/LicenceGuidePage'
+import SightingsPage from '../pages/Sightings/SightingsPage'
+import BallisticsPage from '../pages/Ballistics/BallisticsPage'
+import BloodTrailPage from '../pages/BloodTrail/BloodTrailPage'
+import PermitsPage from '../pages/Permits/PermitsPage'
+import MaintenancePage from '../pages/Maintenance/MaintenancePage'
 import NotFoundPage from '../pages/NotFound/NotFoundPage'
 
 export function AppRouter() {
@@ -54,6 +60,12 @@ export function AppRouter() {
           <Route path="/firstaid" element={<FirstAidPage />} />
           <Route path="/speciesquiz" element={<SpeciesQuizPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/licenceguide" element={<LicenceGuidePage />} />
+          <Route path="/sightings" element={<SightingsPage />} />
+          <Route path="/ballistics" element={<BallisticsPage />} />
+          <Route path="/bloodtrail" element={<BloodTrailPage />} />
+          <Route path="/permits" element={<PermitsPage />} />
+          <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AnimatePresence>

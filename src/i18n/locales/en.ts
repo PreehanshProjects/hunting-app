@@ -21,6 +21,12 @@ const en = {
     group_learn: 'Learn',
     group_gear: 'Gear',
     group_myhunt: 'My Hunt',
+    sightings: 'Sightings Map',
+    bloodtrail: 'Blood Trail',
+    licenceguide: 'Licence Guide',
+    ballistics: 'Ballistics',
+    maintenance: 'Maintenance',
+    permits: 'Permits & Docs',
   },
   hero: {
     line1: 'Experience the Hunt.',

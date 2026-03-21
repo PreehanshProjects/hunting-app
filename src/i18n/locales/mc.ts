@@ -22,6 +22,12 @@ const mc = {
     group_learn: 'Apran',
     group_gear: 'Ekipman',
     group_myhunt: 'Mo Lasas',
+    sightings: 'Kart Observasion',
+    bloodtrail: 'Tras Disan',
+    licenceguide: 'Gid Permis',
+    ballistics: 'Balistik',
+    maintenance: 'Antretien',
+    permits: 'Permis & Dokiman',
   },
   hero: {
     line1: 'Viv Lasas.',
